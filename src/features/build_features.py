@@ -5,7 +5,9 @@ from DataTransformation import LowPassFilter
 from TemporalAbstraction import NumericalAbstraction
 from sklearn.decomposition import PCA
 from DataTransformation import PrincipalComponentAnalysis
-
+from FrequencyAbstraction import FourierTransformation
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
 # --------------------------------------------------------------
 # Cargar el DataFrame
 # --------------------------------------------------------------
@@ -135,3 +137,102 @@ plt.show()
 
 
 print(subset.columns.tolist())
+
+# --------------------------------------------------------------
+# Frequency features
+# --------------------------------------------------------------
+# --------------------------------------------------------------
+# Frequency features
+# --------------------------------------------------------------
+
+# Crear una copia del DataFrame con las abstracciones temporales
+df_freq = df_temporal.copy().reset_index()
+
+# Crear una instancia de FourierTransformation
+FreqAbs = FourierTransformation()
+
+# Definir frecuencia de muestreo (fs) y tamaño de ventana (ws)
+fs = int(1000 / 200)  # Frecuencia de muestreo (Hz)
+ws = int(2800 / 200)  # Tamaño de ventana en muestras
+
+# Aplicar abstracción de frecuencia a la columna "Accelerometer_y"
+df_freq = FreqAbs.abstract_frequency(df_freq, ["Accelerometer_y"], ws, fs)
+
+# Verificar columnas generadas después de aplicar abstract_frequency
+print("Columnas generadas:")
+print([col for col in df_freq.columns if "Accelerometer_y" in col])
+
+# Visualizar la señal cruda
+subset = df_freq[df_freq["Set"] == 14]
+subset["Accelerometer_y"].plot(title="Accelerometer Y Raw Signal (Set 14)")
+plt.show()
+
+# Identificar las columnas de frecuencia generadas
+frequency_columns = [
+    "Accelerometer_y_max_freq",
+    "Accelerometer_y_freq_weighted",
+    "Accelerometer_y_pse",
+]
+for freq in np.round(np.fft.rfftfreq(ws) * fs, 3):
+    col_name = f"Accelerometer_yfreq{freq}Hz_ws{ws}"
+    if col_name in df_freq.columns:
+        frequency_columns.append(col_name)
+
+# Graficar características de frecuencia
+subset[frequency_columns].plot(title="Frequency Features for Accelerometer Y (Set 14)", figsize=(10, 6))
+plt.show()
+
+# Aplicar abstracción de frecuencia a todas las columnas predictoras y Sets
+df_freq_list = []
+for s in df_freq["Set"].unique():
+    subset = df_freq[df_freq["Set"] == s].reset_index(drop=True).copy()
+    subset = FreqAbs.abstract_frequency(subset, predictor_columns, ws, fs)
+    df_freq_list.append(subset)
+
+# Combinar todos los subconjuntos en un DataFrame final
+df_freq = pd.concat(df_freq_list).set_index("epoch (ms)", drop=True)
+
+# Eliminar filas con valores NaN
+df_freq = df_freq.dropna()
+
+# Reducir el tamaño del DataFrame eliminando el 50% de las filas
+df_freq = df_freq.iloc[::2]
+
+# --------------------------------------------------------------
+# Fin del procesamiento
+# --------------------------------------------------------------
+
+print("Procesamiento completado. Vista del DataFrame final con características de frecuencia:")
+print(df_freq.head())
+
+# --------------------------------------------------------------
+# Clustering
+# --------------------------------------------------------------
+
+# Crear una copia del DataFrame con características de frecuencia
+df_cluster = df_freq.copy()
+
+# Definir las columnas a usar para el clustering
+cluster_columns = ["Accelerometer_x", "Accelerometer_y", "Accelerometer_z"]
+
+# Definir el rango de valores de k (número de clústeres) a probar
+k_values = range(2, 10)
+
+# Lista para almacenar las inercias (distancia intra-clúster)
+inertials = []
+
+# Iterar sobre diferentes valores de k
+for k in k_values:
+    subset = df_cluster[cluster_columns]
+    kmeans = KMeans(n_clusters=k, n_init=20, random_state=0)  # Crear el modelo KMeans
+    cluster_labels = kmeans.fit_predict(subset)  # Ajustar el modelo y predecir etiquetas
+    inertials.append(kmeans.inertia_)  # Almacenar la inercia
+
+# Graficar las inercias para visualizar la curva del codo (elbow)
+plt.figure(figsize=(10, 5))
+plt.plot(k_values, inertials, marker="o", linestyle="--", color="b")
+plt.xlabel("Número de Clústeres (k)")
+plt.ylabel("Inercia (Intra-cluster Distance)")
+plt.title("Método del Codo (Elbow Method)")
+plt.grid(True)
+plt.show()
