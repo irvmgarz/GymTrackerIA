@@ -456,3 +456,4 @@ class ClassificationAlgorithms:
             frame_prob_training_y,
             frame_prob_test_y,
         )
+
