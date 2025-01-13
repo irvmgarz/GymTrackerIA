@@ -1,0 +1,10 @@
+Label,Category,Set,reps,pred_reps
+bench,heavy,30,5,5
+bench,heavy,83,5,5
+ohp,heavy,21,5,3
+ohp,heavy,52,5,5
+ohp,heavy,87,5,5
+ohp,medium,37,10,8
+ohp,medium,81,10,3
+ohp,medium,84,10,6
+squat,medium,26,10,7
