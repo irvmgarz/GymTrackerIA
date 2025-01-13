@@ -8,6 +8,9 @@ from DataTransformation import PrincipalComponentAnalysis
 from FrequencyAbstraction import FourierTransformation
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D  # Necesario para gráficos 3D
 # --------------------------------------------------------------
 # Cargar el DataFrame
 # --------------------------------------------------------------
@@ -236,3 +239,75 @@ plt.ylabel("Inercia (Intra-cluster Distance)")
 plt.title("Método del Codo (Elbow Method)")
 plt.grid(True)
 plt.show()
+
+# --------------------------------------------------------------
+# Aplicar clustering con k óptimo
+# --------------------------------------------------------------
+
+# Elegir el número de clústeres (puedes ajustarlo según la gráfica del codo)
+optimal_k = 5
+
+# Crear el modelo KMeans con el número de clústeres óptimo
+kmeans = KMeans(n_clusters=optimal_k, n_init=20, random_state=0)
+
+# Aplicar el modelo y asignar etiquetas de clúster al DataFrame
+subset = df_cluster[cluster_columns]
+df_cluster["cluster"] = kmeans.fit_predict(subset)
+
+# --------------------------------------------------------------
+# Visualizar clústeres en 3D
+# --------------------------------------------------------------
+
+# Crear la figura 3D
+fig = plt.figure(figsize=(15, 15))
+ax = fig.add_subplot(projection="3d")
+
+# Graficar cada clúster con colores diferentes
+for c in df_cluster["cluster"].unique():
+    subset = df_cluster[df_cluster["cluster"] == c]
+    ax.scatter(
+        subset["Accelerometer_x"],
+        subset["Accelerometer_y"],
+        subset["Accelerometer_z"],
+        label=f"Cluster {c}",
+    )
+
+# Configurar las etiquetas de los ejes
+ax.set_xlabel("X-Axis")
+ax.set_ylabel("Y-Axis")
+ax.set_zlabel("Z-Axis")
+plt.title("Clustering en 3D")
+plt.legend()
+plt.show()
+
+# --------------------------------------------------------------
+# Visualización 3D de datos del acelerómetro por etiqueta
+# --------------------------------------------------------------
+
+# Crear la figura 3D
+fig = plt.figure(figsize=(15, 15))
+ax = fig.add_subplot(projection="3d")
+
+# Graficar cada etiqueta con colores diferentes
+for l in df_cluster["Label"].unique():
+    subset = df_cluster[df_cluster["Label"] == l]
+    ax.scatter(
+        subset["Accelerometer_x"],
+        subset["Accelerometer_y"],
+        subset["Accelerometer_z"],
+        label=f"Label {l}"
+    )
+
+# Configurar las etiquetas de los ejes
+ax.set_xlabel("X-Axis (Accelerometer_x)")
+ax.set_ylabel("Y-Axis (Accelerometer_y)")
+ax.set_zlabel("Z-Axis (Accelerometer_z)")
+plt.title("Visualización de Acelerómetro por Etiqueta")
+plt.legend()
+plt.show()
+
+# --------------------------------------------------------------
+# Export dataset
+# --------------------------------------------------------------
+df_cluster.to_pickle("../data/03_data_feutures.pkl")
+
