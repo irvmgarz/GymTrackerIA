@@ -10,13 +10,15 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(to bottom, #1e1e1e, #343a40);
+            background-image: url("https://images.unsplash.com/photo-1517836357463-d25dfeac3438?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z3ltfGVufDB8fDB8fHww") ;
+            background-size: cover; /* Ajusta la imagen al tamaño de la pantalla */
+            background-repeat: no-repeat; /* Evita que la imagen se repita */
+            background-position: center; /* Centra la imagen en la pantalla */
             color: #ffffff;
         }
 
         header {
             background: #ff4c29; /* Color destacado fitness */
-            padding: 20px 0;
             text-align: center;
         }
 
@@ -88,44 +90,64 @@
             margin: 0;
         }
 
-        /* Footer */
-        footer {
-            background: #1e1e1e;
-            color: #bbbbbb;
-            text-align: center;
-            padding: 10px 0;
-            font-size: 0.9rem;
+    
+
+        /* Logo */
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            padding: 20px 40px;
+            border-radius: 8px;
         }
 
-        footer a {
-            color: #ff4c29;
-            text-decoration: none;
+
+        .logo-text {
+            color: white;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            margin-left: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
         }
 
-        footer a:hover {
-            text-decoration: underline;
+        .gym {
+            font-size: 40px;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .tracker {
+            font-size: 34px;
+            letter-spacing: 3px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>GYM Tracker</h1>
+        <div class="logo-container">
+            <div class="logo-icon"></div>
+            <div class="logo-text">
+                <span class="gym">GYM</span>
+                <span class="tracker">TRACKER</span>
+            </div>
+        </div>
+
     </header>
 
     <div class="hero">
-        <h2>Optimiza tus entrenamientos</h2>
+        <h2>Más que datos, información para superar tus límites.</h2>
     </div>
 
     <div class="container">
-        <h2>Sube tu archivo CSV para procesarlo</h2>
+        <h2>Sube tu archivo para procesarlo</h2>
         <form action="/process" method="post" enctype="multipart/form-data">
             <input type="file" name="file" accept=".csv">
             <button type="submit">Procesar archivo</button>
         </form>
     </div>
-
-    <footer>
-        <p>Desarrollado por <a href="#">Gym Tracker IA</a> | <a href="https://github.com/giamguz/AI_project">GitHub</a></p>
-    </footer>
 </body>
 </html>

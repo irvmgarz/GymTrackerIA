@@ -26,7 +26,7 @@
             margin: 0;
         }
 
-        /* Estilo de la tabla */
+        /* Estilo del contenedor */
         .container {
             margin: 20px auto;
             padding: 20px;
@@ -40,26 +40,18 @@
             color: #ff9e7a;
         }
 
-        .data {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 20px 0;
+        /* Estilo del gráfico */
+        .graph-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
         }
 
-        .data th, .data td {
-            border: 1px solid #ffffff;
-            padding: 10px;
-            text-align: center;
-            color: #ffffff;
-        }
-
-        .data th {
-            background-color: #ff4c29;
-            color: #ffffff;
-        }
-
-        .data tr:nth-child(even) {
-            background-color: #343a40;
+        .graph-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(255, 76, 41, 0.5);
         }
 
         /* Estilo de los botones */
@@ -93,8 +85,10 @@
 
     <div class="container">
         <p><strong>Error absoluto medio (MAE):</strong> {{ error }}</p>
-        <h2>Tabla de Resultados</h2>
-        {{ tables|safe }}
+        <h2>Gráfico de Repeticiones</h2>
+        <div class="graph-container">
+            <img src="/uploads/{{ graph_filename }}" alt="Gráfico de Repeticiones">
+        </div>
         <div class="action-buttons">
             <a href="/download/results.csv">Descargar resultados en CSV</a>
             <a href="/">Regresar al inicio</a>

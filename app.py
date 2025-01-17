@@ -1,10 +1,13 @@
 import os
 import numpy as np
 import pandas as pd
-from flask import Flask, request, render_template, send_file
+from flask import Flask, request, render_template, send_file, send_from_directory
 from scipy.signal import argrelextrema
 from sklearn.metrics import mean_absolute_error
 from scipy.signal import butter, filtfilt
+import matplotlib
+matplotlib.use('Agg')  # Solución para evitar errores relacionados con GUI
+import matplotlib.pyplot as plt
 
 class LowPassFilter:
     def low_pass_filter(self, dataset, col, sampling_frequency, cutoff_frequency, order):
@@ -38,11 +41,9 @@ def process_file():
 
         # Cargar y procesar el archivo CSV
         df = pd.read_csv(filepath)
-
-        # Limpieza de datos (eliminar \n y espacios en blanco)
         df = df.applymap(lambda x: str(x).replace('\n', '').strip() if isinstance(x, str) else x)
 
-        # Aquí comienza tu lógica
+        # Procesamiento de los datos
         df = df[df["Label"] != "Rest"]
         Accelerometer_r = df["Accelerometer_x"] ** 2 + df["Accelerometer_y"] ** 2 + df["Accelerometer_z"] ** 2
         Gyroscope_r = df["Gyroscope_x"] ** 2 + df["Gyroscope_y"] ** 2 + df["Gyroscope_z"] ** 2
@@ -81,22 +82,36 @@ def process_file():
             reps = counts_reps(subset, cutoff=cutoff, column=column)
             rep_df.loc[rep_df["Set"] == s, "pred_reps"] = reps
 
-        # Limpieza exhaustiva para evitar problemas
-        rep_df = rep_df.replace({r'\n': '', r'\r': ''}, regex=True)
-        rep_df = rep_df.applymap(lambda x: str(x).strip() if isinstance(x, str) else x)
-
-        # Verificar si hay caracteres no deseados en el DataFrame (depuración)
-        print(rep_df.head())  # Esto imprime los primeros registros para verificar
-
         error = round(mean_absolute_error(rep_df["reps"], rep_df["pred_reps"]), 2)
-        output_file = os.path.join(app.config['UPLOAD_FOLDER'], "results.csv")
-        rep_df.to_csv(output_file, index=False)
 
-        return render_template('results.html', tables=[rep_df.to_html(classes='data', escape=False)], error=error, filename="results.csv")
+        # Verificar y convertir columnas a numéricas
+        rep_df["reps"] = pd.to_numeric(rep_df["reps"], errors="coerce")
+        rep_df["pred_reps"] = pd.to_numeric(rep_df["pred_reps"], errors="coerce")
+
+        # Calcular  de repeticiones por ejercicio
+        rep_df_grouped = rep_df.groupby("Label")[["reps", "pred_reps"]].mean()
+
+        # Generar gráfico de  de repeticiones por ejercicio
+        plt.figure(figsize=(10, 6))
+        plt.bar(rep_df_grouped.index, rep_df_grouped["pred_reps"], label="Repeticiones Predichas ", alpha=0.7, color='blue')
+        plt.bar(rep_df_grouped.index, rep_df_grouped["reps"], label="Repeticiones Reales ", alpha=0.7, color='orange')
+        plt.xlabel("Ejercicio")
+        plt.ylabel("Repeticiones ")
+        plt.title("Repeticiones Reales vs Predichas por Ejercicio")
+        plt.legend()
+        graph_path = os.path.join(app.config['UPLOAD_FOLDER'], "reps_comparison_avg.png")
+        plt.savefig(graph_path)
+        plt.close()
+
+        return render_template('results.html', error=error, graph_filename="reps_comparison_avg.png")
 
 @app.route('/download/<filename>')
 def download_file(filename):
     return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), as_attachment=True)
+
+@app.route('/uploads/<filename>')
+def serve_image(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
